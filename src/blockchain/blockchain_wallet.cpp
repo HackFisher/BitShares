@@ -292,6 +292,7 @@ namespace bts { namespace blockchain {
    {
       my->_data.extra_keys.push_back(key);
       my->_my_addresses[ key.get_public_key() ] = my->_data.extra_keys.size() -1;
+	  save();
    }
 
    bts::address   wallet::get_new_address()

@@ -1,0 +1,3 @@
+[submodule "vendor/leveldb-win"]
+	path = vendor/leveldb-win
+	url = https://github.com/InvictusInnovations/leveldb-win.git

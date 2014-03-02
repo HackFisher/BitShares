@@ -5,6 +5,9 @@
 #include <fc/crypto/bigint.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/reflect/variant.hpp>
+#include <fc/crypto/base58.hpp>
+#include <fc/io/raw.hpp>
+#include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <cstdint>
 
@@ -157,19 +160,36 @@ namespace bts { namespace blockchain {
   }
   price::price( const std::string& s )
   {
-     /*
      std::stringstream ss(s);
-     std::string a,b,q;
-     char d;
-     ss >> a >> b >> q >> d;
-     */
+     double a;
+     ss >> a;
+     uint64_t high_bits = uint64_t(a);
+     double fract_part = a - high_bits;
+     uint64_t low_bits = uint64_t(-1)*fract_part;
+     ratio = fc::uint128( high_bits, low_bits );
+      
+     std::string qb;
+     ss >> qb;
+     std::vector<std::string> quote_base;
+     boost::split(quote_base, qb, boost::is_any_of("/"));
+     quote_unit = fc::variant(quote_base[0]).as<asset::type>();
+     base_unit = fc::variant(quote_base[1]).as<asset::type>();
+
+     std::string base58;
+     ss >> base58;
+     // base58 is optional, overide. example: 3.13415 usd/bts base58string
+     if (!base58.empty()) {
+         std::vector<char> data = fc::from_base58(base58);
+         fc::datastream<const char*> ds(data.data(),data.size());
+         fc::raw::unpack( ds, ratio);
+     }
   }
   price::price( double a, asset::type q, asset::type b )
   {
      FC_ASSERT( q > b, "${quote} > ${base}", ("quote",q)("base",b) );
 
      uint64_t high_bits = uint64_t(a);
-     double fract_part = a - high_bits;
+     double fract_part = a - high_bits; 
      uint64_t low_bits = uint64_t(-1)*fract_part;
      ratio = fc::uint128( high_bits, low_bits );
      base_unit = b;
@@ -200,7 +220,10 @@ namespace bts { namespace blockchain {
      std::string frac(fraction);
      s += frac.substr(1,frac.size()-2);
      s += " " + std::string(quote_unit);
-     s += "/" + std::string(base_unit); 
+     s += "/" + std::string(base_unit);
+     std::vector<char> data = fc::raw::pack(ratio);
+     std::string base58 = fc::to_base58( data.data(), data.size());
+     s += " " + base58;
      return s;
   }
 

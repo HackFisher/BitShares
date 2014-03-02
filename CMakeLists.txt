@@ -20,7 +20,7 @@ add_subdirectory( vendor/miniupnp/miniupnpc )
 # Set the Berkeley DB version you use
 IF (WIN32)
   SET(DB_VERSION 60)
-  SET(BDB_STATIC_LIBS 0)
+  SET(BDB_STATIC_LIBS 1)
 ENDIF()
 
 
